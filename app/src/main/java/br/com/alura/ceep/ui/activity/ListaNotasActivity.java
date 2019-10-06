@@ -9,7 +9,6 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.Serializable;
 import java.util.List;
 
 import br.com.alura.ceep.R;
@@ -20,9 +19,10 @@ import br.com.alura.ceep.ui.recyclerview.adapter.listener.OnItemClickListener;
 
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CHAVE_NOTA;
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CHAVE_POSICAO;
+import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CODIGO_REQUISICAO_ALTERA_NOTA;
+import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CODIGO_REQUISICAO_INSERE_NOTA;
+import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CODIGO_RESULTADO_NOTA_CRIADA;
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.POSICAO_INVALIDA;
-import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.REQUEST_CODE_INSERE_NOTA;
-import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.RESULT_CODE_NOTA_CRIADA;
 
 public class ListaNotasActivity extends AppCompatActivity {
 
@@ -42,20 +42,20 @@ public class ListaNotasActivity extends AppCompatActivity {
         botaoInsereNotas.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                vaiParaFormularioNotaActivity();
+                vaiParaFormularioNotaActivityInsere();
             }
         });
     }
 
-    private void vaiParaFormularioNotaActivity() {
+    private void vaiParaFormularioNotaActivityInsere() {
         Intent intent = new Intent(ListaNotasActivity.this, FormularioNotaActivity.class);
-        startActivityForResult(intent, REQUEST_CODE_INSERE_NOTA);
+        startActivityForResult(intent, CODIGO_REQUISICAO_INSERE_NOTA);
     }
 
     private List<Nota> pegaTotasNotas() {
         NotaDAO dao = new NotaDAO();
         for (int i = 1; i <= 10; i++) {
-            dao.insere(new Nota("Título " + i , "Descrição " + i));
+            dao.insere(new Nota("Título " + i, "Descrição " + i));
         }
         return dao.todos();
     }
@@ -63,16 +63,40 @@ public class ListaNotasActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (ehUmResultaComNota(requestCode, resultCode, data)) {
+        if (ehUmResultaInsereNota(requestCode, resultCode, data)) {
             Nota notaRecebida = (Nota) data.getSerializableExtra(CHAVE_NOTA);
             adiciona(notaRecebida);
         }
-        if(requestCode == 2 && resultCode == RESULT_CODE_NOTA_CRIADA && temNota(data) && data.hasExtra(CHAVE_POSICAO)){
+        if (ehResultadoAlteraNota(requestCode, resultCode, data)) {
             Nota notaRecebida = (Nota) data.getSerializableExtra(CHAVE_NOTA);
             int posicaoRecebida = data.getIntExtra(CHAVE_POSICAO, POSICAO_INVALIDA);
-            new NotaDAO().altera(posicaoRecebida, notaRecebida);
-            adapter.altera(posicaoRecebida, notaRecebida);
+            if (ehPosicaoValida(posicaoRecebida)) {
+                altera(notaRecebida, posicaoRecebida);
+            } else {
+                Toast.makeText(this,
+                        "Ocorreu um problema na alteração da nota",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
+    }
+
+    private void altera(Nota nota, int posicao) {
+        new NotaDAO().altera(posicao, nota);
+        adapter.altera(posicao, nota);
+    }
+
+    private boolean ehPosicaoValida(int posicaoRecebida) {
+        return posicaoRecebida > POSICAO_INVALIDA;
+    }
+
+    private boolean ehResultadoAlteraNota(int requestCode, int resultCode, @Nullable Intent data) {
+        return ehCodigoRequisicaoAlteraNota(requestCode) &&
+                ehCodigoResultadoNotaCriada(resultCode) &&
+                temNota(data);
+    }
+
+    private boolean ehCodigoRequisicaoAlteraNota(int requestCode) {
+        return requestCode == CODIGO_REQUISICAO_ALTERA_NOTA;
     }
 
     private void adiciona(Nota nota) {
@@ -80,7 +104,7 @@ public class ListaNotasActivity extends AppCompatActivity {
         adapter.adiciona(nota);
     }
 
-    private boolean ehUmResultaComNota(int requestCode, int resultCode, @Nullable Intent data) {
+    private boolean ehUmResultaInsereNota(int requestCode, int resultCode, @Nullable Intent data) {
         return ehCodigoRequisicaoInsereNota(requestCode) &&
                 ehCodigoResultadoNotaCriada(resultCode) &&
                 temNota(data);
@@ -91,11 +115,11 @@ public class ListaNotasActivity extends AppCompatActivity {
     }
 
     private boolean ehCodigoResultadoNotaCriada(int resultCode) {
-        return resultCode == RESULT_CODE_NOTA_CRIADA;
+        return resultCode == CODIGO_RESULTADO_NOTA_CRIADA;
     }
 
     private boolean ehCodigoRequisicaoInsereNota(int requestCode) {
-        return requestCode == REQUEST_CODE_INSERE_NOTA;
+        return requestCode == CODIGO_REQUISICAO_INSERE_NOTA;
     }
 
     private void configuraRecyclerView(List<Nota> notas) {
@@ -109,12 +133,16 @@ public class ListaNotasActivity extends AppCompatActivity {
         adapter.setOnItemClickListener(new OnItemClickListener() {
             @Override
             public void onItemClick(Nota nota, int posicao) {
-                Intent abreFormularioComNota = new Intent(ListaNotasActivity.this, FormularioNotaActivity.class);
-                abreFormularioComNota.putExtra(CHAVE_NOTA, nota);
-                abreFormularioComNota.putExtra(CHAVE_POSICAO, posicao);
-                startActivityForResult(abreFormularioComNota, 2);
+                vaiParaFormularioNotaActivityAltera(nota, posicao);
             }
         });
+    }
+
+    private void vaiParaFormularioNotaActivityAltera(Nota nota, int posicao) {
+        Intent abreFormularioComNota = new Intent(ListaNotasActivity.this, FormularioNotaActivity.class);
+        abreFormularioComNota.putExtra(CHAVE_NOTA, nota);
+        abreFormularioComNota.putExtra(CHAVE_POSICAO, posicao);
+        startActivityForResult(abreFormularioComNota, CODIGO_REQUISICAO_ALTERA_NOTA);
     }
 
 }
