@@ -19,6 +19,8 @@ import br.com.alura.ceep.ui.recyclerview.adapter.ListaNotasAdapter;
 import br.com.alura.ceep.ui.recyclerview.adapter.listener.OnItemClickListener;
 
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CHAVE_NOTA;
+import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.CHAVE_POSICAO;
+import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.POSICAO_INVALIDA;
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.REQUEST_CODE_INSERE_NOTA;
 import static br.com.alura.ceep.ui.activity.NotaActivityConstantes.RESULT_CODE_NOTA_CRIADA;
 
@@ -65,9 +67,9 @@ public class ListaNotasActivity extends AppCompatActivity {
             Nota notaRecebida = (Nota) data.getSerializableExtra(CHAVE_NOTA);
             adiciona(notaRecebida);
         }
-        if(requestCode == 2 && resultCode == RESULT_CODE_NOTA_CRIADA && temNota(data) && data.hasExtra("posicao")){
+        if(requestCode == 2 && resultCode == RESULT_CODE_NOTA_CRIADA && temNota(data) && data.hasExtra(CHAVE_POSICAO)){
             Nota notaRecebida = (Nota) data.getSerializableExtra(CHAVE_NOTA);
-            int posicaoRecebida = data.getIntExtra("posicao", -1);
+            int posicaoRecebida = data.getIntExtra(CHAVE_POSICAO, POSICAO_INVALIDA);
             new NotaDAO().altera(posicaoRecebida, notaRecebida);
             adapter.altera(posicaoRecebida, notaRecebida);
         }
@@ -109,7 +111,7 @@ public class ListaNotasActivity extends AppCompatActivity {
             public void onItemClick(Nota nota, int posicao) {
                 Intent abreFormularioComNota = new Intent(ListaNotasActivity.this, FormularioNotaActivity.class);
                 abreFormularioComNota.putExtra(CHAVE_NOTA, nota);
-                abreFormularioComNota.putExtra("posicao", posicao);
+                abreFormularioComNota.putExtra(CHAVE_POSICAO, posicao);
                 startActivityForResult(abreFormularioComNota, 2);
             }
         });
