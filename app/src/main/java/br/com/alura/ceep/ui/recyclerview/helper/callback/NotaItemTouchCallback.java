@@ -4,7 +4,16 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
+import br.com.alura.ceep.dao.NotaDAO;
+import br.com.alura.ceep.ui.recyclerview.adapter.ListaNotasAdapter;
+
 public class NotaItemTouchCallback extends ItemTouchHelper.Callback {
+
+    private final ListaNotasAdapter adapter;
+
+    public NotaItemTouchCallback(ListaNotasAdapter adapter) {
+        this.adapter = adapter;
+    }
 
     @Override
     public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
@@ -19,6 +28,8 @@ public class NotaItemTouchCallback extends ItemTouchHelper.Callback {
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
-
+        int posicaoDaNotaDeslizada = viewHolder.getAdapterPosition();
+        new NotaDAO().remove(posicaoDaNotaDeslizada);
+        adapter.remove(posicaoDaNotaDeslizada);
     }
 }
