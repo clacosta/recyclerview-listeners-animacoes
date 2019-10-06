@@ -32,15 +32,23 @@ public class NotaItemTouchCallback extends ItemTouchHelper.Callback {
                           @NonNull RecyclerView.ViewHolder target) {
         int posicaoInicial = viewHolder.getAdapterPosition();
         int posicaoFinal = target.getAdapterPosition();
+        trocaNotas(posicaoInicial, posicaoFinal);
+        return true;
+    }
+
+    private void trocaNotas(int posicaoInicial, int posicaoFinal) {
         new NotaDAO().troca(posicaoInicial, posicaoFinal);
         adapter.troca(posicaoInicial, posicaoFinal);
-        return true;
     }
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int i) {
         int posicaoDaNotaDeslizada = viewHolder.getAdapterPosition();
-        new NotaDAO().remove(posicaoDaNotaDeslizada);
-        adapter.remove(posicaoDaNotaDeslizada);
+        removeNota(posicaoDaNotaDeslizada);
+    }
+
+    private void removeNota(int posicao) {
+        new NotaDAO().remove(posicao);
+        adapter.remove(posicao);
     }
 }
