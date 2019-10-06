@@ -9,7 +9,6 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -58,9 +57,6 @@ public class ListaNotasActivity extends AppCompatActivity {
 
     private List<Nota> pegaTotasNotas() {
         NotaDAO dao = new NotaDAO();
-        for (int i = 1; i <= 10; i++) {
-            dao.insere(new Nota("Título " + i, "Descrição " + i));
-        }
         return dao.todos();
     }
 
@@ -80,10 +76,6 @@ public class ListaNotasActivity extends AppCompatActivity {
                 if (ehPosicaoValida(posicaoRecebida)) {
                     new NotaDAO().altera(posicaoRecebida, notaRecebida);
                     adapter.altera(posicaoRecebida, notaRecebida);
-                } else {
-                    Toast.makeText(this,
-                            "Ocorreu um problema na alteração da nota",
-                            Toast.LENGTH_SHORT).show();
                 }
             }
         }
